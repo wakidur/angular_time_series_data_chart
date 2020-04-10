@@ -1,3 +1,68 @@
+<div class="container">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="row">
+            <div class="col-12 col-sm-4">
+              <h6>Timeseries Data ({{timeSeries.length}})</h6>
+            </div>
 
-<h1>Hello</h1>
+            <div class="col-12 col-sm-8">
+              <form #timeSeriesForm="ngForm" (ngSubmit)="timeSeriesForm.valid && timeSeriesDateFilter(timeSeriesForm)">
+                <div class="form-row">
+                  <div class="col-md-4">
+                    <div class="input-wrapper">
+                      <input
+                      [(ngModel)]="selectedMoments"
+                      class="form-control"
+                      name="startDate"
+                      [owlDateTimeTrigger]="dtPicker1"
+                      [owlDateTime]="dtPicker1"
+                      [selectMode]="'rangeFrom'"
+                       required>
+                      <owl-date-time #dtPicker1></owl-date-time>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="input-wrapper">
+                      <input
+                      [(ngModel)]="selectedMoments"
+                      class="form-control"
+                      name="endDate"
+                      [owlDateTimeTrigger]="dtPicker2"
+                      [owlDateTime]="dtPicker2"
+                      [selectMode]="'rangeTo'"
+                      required>
+                      <owl-date-time #dtPicker2></owl-date-time>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <button type="submit" [disabled]="!timeSeriesForm.valid" class="btn btn-primary mr-3">Apply</button>
+                    <button type="reset" (click)="resetTimeSeriesForm()" [disabled]="!timeSeriesForm.valid" class="btn btn-secondary">Cancle</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="card-body text-center">
+          <div *ngIf="isEndDateGet" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Selected End Date</strong> is below from Start Date .
+            <button type="button" class="close" (click)="closeTimeErrorAlart()" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div  *ngIf="isApiCallInit"  class="spinner-border text-danger m-4" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <div [chart]="chart"></div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <router-outlet></router-outlet>
