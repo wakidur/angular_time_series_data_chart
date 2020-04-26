@@ -7,6 +7,7 @@ import { map } from "rxjs/operators";
   providedIn: 'root',
 })
 export class TimeseriesService {
+
   constructor(private httpClient: HttpClient) {}
 // Http Get Request method
   get(url?: string): Observable<any> {
@@ -15,5 +16,9 @@ export class TimeseriesService {
         return response;
       })
     );
+  }
+
+  post(url: string, body: any): Observable<any> {
+    return this.httpClient.post(url, body, { observe: "response" });
   }
 }

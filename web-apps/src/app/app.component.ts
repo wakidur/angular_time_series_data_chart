@@ -17,8 +17,8 @@ import { TimeseriesService } from './core/service/timeseries.service';
 import { NgForm } from '@angular/forms';
 
 export interface DateFilter {
-  startDate: Date;
-  endDate: Date;
+  startDate: string;
+  endDate: string;
 }
 
 @Component({
@@ -33,43 +33,20 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   private subscription: Subscription;
   chart: Chart; // instantiate Chart
   filterByDate: DateFilter = {} as DateFilter; // From model file instantiate
+  dateFilterSearch: DateFilter = {} as DateFilter; // From model file instantiate
   timeSeries: number[] = []; // Time Series data container
   public selectedMoments: Date[] = [];
-
 
   constructor(private timeSeriesService: TimeseriesService) {}
 
   ngOnInit() {
-
-    // Create date Timeseries Date  data
-    // let dataPoints = [];
-    // let startTime = moment.utc('04-01-2020 0:0:00.00').valueOf();
-    // let endTime = moment.utc('05-31-2020 24:00:00.00').valueOf();
-    // console.log(startTime);
-    // console.log(endTime);
-    // let y = 0;
-    // let devaidedBy = 600000;
-    // let minasFromLarge = parseInt(`${endTime}`) - parseInt(`${startTime}`);
-    // let fractionValue = Math.ceil(
-    //   parseInt(`${minasFromLarge}`) / parseInt(`${devaidedBy}`)
-    // );
-
-
-    // for (let i = 0; i < 600000; i++) {
-    //   startTime += fractionValue;
-    //   y += Math.round(5 + Math.random() * (-5 - 5));
-    //   dataPoints.push([startTime, y]);
-    // }
-    // console.log(dataPoints);
-
-
+    this.url = 'http://localhost:3000/timeseries';
     this.isApiCallInit = false;
     this.isEndDateGet = false;
     this.selectedMoments = [
-      new Date(2020, 3, 1, 0, 0),
-      new Date(2020, 4, 29, 23, 59),
+      new Date(Date.UTC(2020, 3, 1, 0, 0, 0)),
+      new Date(Date.UTC(2020, 4, 30, 23, 59)),
     ];
-    this.url = '/assets/mock/month-old.json';
     // Initial call
 
     this.getAllTimeSeries();
@@ -80,7 +57,7 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
     this.isApiCallInit = true;
     this.subscription = this.timeSeriesService.get(this.url).subscribe(
       (res: any) => {
-        this.timeSeries = res.body;
+        this.timeSeries = res.body.timeSeries;
         this.generateTimeSeriesChart(this.timeSeries);
       },
       (err: any) => {
@@ -103,7 +80,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
       .get('rgba');
 
     const chart = new Chart({
-
       chart: {
         zoomType: 'x',
       },
@@ -146,7 +122,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           },
           threshold: null,
         },
-
       },
       series: [
         {
@@ -155,9 +130,6 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
           data: data,
         },
       ],
-
-
-
     });
 
     this.chart = chart;
@@ -166,14 +138,29 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public timeSeriesDateFilter(timeseries: NgForm) {
+    this.dateFilterSearch = {} as DateFilter;
     this.isApiCallInit = true;
-    const start = moment.utc(this.selectedMoments[0]).valueOf();
-    const end = moment.utc(this.selectedMoments[1]).valueOf();
-    if (end > start) {
-      this.timeSeries = this.timeSeries.filter(
-        (timeStream) => timeStream[0] >= start && timeStream[0] <= end
+    this.dateFilterSearch.startDate = moment
+      .utc(this.selectedMoments[0])
+      .format();
+    this.dateFilterSearch.endDate = moment
+      .utc(this.selectedMoments[1])
+      .format();
+
+    if (this.dateFilterSearch.endDate > this.dateFilterSearch.startDate) {
+      this.timeSeriesService.post(this.url, this.dateFilterSearch).subscribe(
+        (res: any) => {
+          this.timeSeries = res.body.timeSeries;
+          this.generateTimeSeriesChart(this.timeSeries);
+        },
+        (err: any) => {
+          console.error(err);
+          this.isEndDateGet = true;
+        },
+        () => {
+          this.isApiCallInit = false;
+        }
       );
-      this.generateTimeSeriesChart(this.timeSeries);
     } else {
       this.isEndDateGet = true;
       this.isApiCallInit = false;
@@ -186,17 +173,10 @@ export class AppComponent implements OnInit, AfterViewInit, OnDestroy {
 
   closeTimeErrorAlart() {
     this.isEndDateGet = false;
-    this.selectedMoments = [];
-    this.selectedMoments = [
-      new Date(2020, 3, 1, 0, 0),
-      new Date(2020, 3, 29, 23, 59),
-    ];
     this.getAllTimeSeries();
   }
 
   ngAfterViewInit(): void {
-    //Called after ngAfterContentInit when the component's view has been initialized. Applies to components only.
-    //Add 'implements AfterViewInit' to the class.
 
   }
 
